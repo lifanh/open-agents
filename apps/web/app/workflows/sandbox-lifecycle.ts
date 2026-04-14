@@ -1,4 +1,4 @@
-import { sleep } from "workflow";
+import { sleep } from "@/lib/workflow";
 import { getSessionById, updateSession } from "@/lib/db/sessions";
 import { SANDBOX_LIFECYCLE_MIN_SLEEP_MS } from "@/lib/sandbox/config";
 import {
@@ -51,7 +51,7 @@ async function computeLifecycleWakeDecision(
   }
 
   const state = session.sandboxState;
-  if (!canOperateOnSandbox(state) || state.type !== "vercel") {
+  if (!canOperateOnSandbox(state) || (state.type !== "vercel" && state.type !== "cloudflare")) {
     return { shouldContinue: false, reason: "sandbox-not-operable" };
   }
   if (!(await claimLifecycleLease(sessionId, runId))) {

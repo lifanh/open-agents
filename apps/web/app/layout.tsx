@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
+// Analytics: Vercel Analytics removed. Add your preferred analytics provider here.
+// import { Analytics } from "@vercel/analytics/next";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -36,17 +37,30 @@ const themeInitializationScript = `
 })();
 `;
 
-const isPreviewDeployment = process.env.VERCEL_ENV === "preview";
+const isPreviewDeployment = process.env.DEPLOY_ENV === "preview" || process.env.VERCEL_ENV === "preview";
 const faviconPath = isPreviewDeployment
   ? "/favicon-preview.svg"
   : "/favicon.ico";
-const metadataBase =
-  process.env.VERCEL_ENV === "production" &&
-  process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? new URL(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`)
-    : process.env.VERCEL_URL
-      ? new URL(`https://${process.env.VERCEL_URL}`)
-      : new URL("https://open-agents.dev");
+
+// Support multiple hosting platforms for metadata base URL
+const metadataBase = (() => {
+  const customUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (customUrl) return new URL(customUrl);
+
+  // Cloudflare Pages
+  const cfUrl = process.env.CF_PAGES_URL;
+  if (cfUrl) return new URL(cfUrl);
+
+  // Vercel
+  if (process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return new URL(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`);
+  }
+  if (process.env.VERCEL_URL) {
+    return new URL(`https://${process.env.VERCEL_URL}`);
+  }
+
+  return new URL("https://open-agents.dev");
+})();
 
 export const metadata: Metadata = {
   metadataBase,
@@ -79,7 +93,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: themeInitializationScript }}
         />
         <Providers>{children}</Providers>
-        <Analytics />
+        {/* Analytics provider placeholder */}
       </body>
     </html>
   );

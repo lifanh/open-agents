@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
-import { withWorkflow } from "workflow/next";
+// Vercel Workflow replaced with lightweight async runner
+// import { withWorkflow } from "workflow/next";
+const withWorkflow = <T>(config: T): T => config;
 
 const nextConfig: NextConfig = {
   images: {

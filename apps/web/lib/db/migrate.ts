@@ -29,9 +29,12 @@ type ErrorWithCause = {
   cause?: unknown;
 };
 
-const url = process.env.POSTGRES_URL;
+const url =
+  process.env.DATABASE_URL ??
+  process.env.POSTGRES_URL ??
+  process.env.HYPERDRIVE_URL;
 if (!url) {
-  console.log("POSTGRES_URL not set — skipping migrations");
+  console.log("DATABASE_URL/POSTGRES_URL not set — skipping migrations");
   process.exit(0);
 }
 

@@ -13,6 +13,7 @@ import {
   DEFAULT_SANDBOX_PORTS,
   DEFAULT_SANDBOX_TIMEOUT_MS,
 } from "@/lib/sandbox/config";
+import { getDefaultSandboxType } from "@open-harness/sandbox";
 import {
   buildActiveLifecycleUpdate,
   getNextLifecycleVersion,
@@ -38,7 +39,7 @@ interface CreateSandboxRequest {
   branch?: string;
   isNewBranch?: boolean;
   sessionId?: string;
-  sandboxType?: "vercel";
+  sandboxType?: "vercel" | "cloudflare";
 }
 
 // async function syncVercelProjectEnvVarsToSandbox(params: {
@@ -110,9 +111,11 @@ export async function POST(req: Request) {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  if (body.sandboxType && body.sandboxType !== "vercel") {
+  if (body.sandboxType && body.sandboxType !== "vercel" && body.sandboxType !== "cloudflare") {
     return Response.json({ error: "Invalid sandbox type" }, { status: 400 });
   }
+
+  const sandboxType = body.sandboxType ?? getDefaultSandboxType();
 
   const { repoUrl, branch = "main", isNewBranch = false, sessionId } = body;
 
@@ -185,16 +188,16 @@ export async function POST(req: Request) {
 
   const sandbox = await connectSandbox({
     state: {
-      type: "vercel",
+      type: sandboxType,
       ...(sandboxName ? { sandboxName } : {}),
       source,
-    },
+    } as SandboxState,
     options: {
       githubToken: githubToken ?? undefined,
       gitUser,
       timeout: DEFAULT_SANDBOX_TIMEOUT_MS,
       ports: DEFAULT_SANDBOX_PORTS,
-      baseSnapshotId: DEFAULT_SANDBOX_BASE_SNAPSHOT_ID,
+      ...(sandboxType === "vercel" ? { baseSnapshotId: DEFAULT_SANDBOX_BASE_SNAPSHOT_ID } : {}),
       persistent: !!sandboxName,
       resume: !!sandboxName,
       createIfMissing: !!sandboxName,
@@ -228,17 +231,20 @@ export async function POST(req: Request) {
       //   );
       // }
 
-      try {
-        await syncVercelCliAuthForSandbox({
-          userId: session.user.id,
-          sessionRecord,
-          sandbox,
-        });
-      } catch (error) {
-        console.error(
-          `Failed to prepare Vercel CLI auth for session ${sessionRecord.id}:`,
-          error,
-        );
+      // Only sync Vercel CLI auth for Vercel sandboxes
+      if (sandboxType === "vercel") {
+        try {
+          await syncVercelCliAuthForSandbox({
+            userId: session.user.id,
+            sessionRecord,
+            sandbox,
+          });
+        } catch (error) {
+          console.error(
+            `Failed to prepare Vercel CLI auth for session ${sessionRecord.id}:`,
+            error,
+          );
+        }
       }
 
       try {
@@ -266,7 +272,7 @@ export async function POST(req: Request) {
     createdAt: Date.now(),
     timeout: DEFAULT_SANDBOX_TIMEOUT_MS,
     currentBranch: repoUrl ? branch : undefined,
-    mode: "vercel",
+    mode: sandboxType,
     timing: { readyMs },
   });
 }

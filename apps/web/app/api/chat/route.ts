@@ -1,5 +1,5 @@
 import { createUIMessageStreamResponse, type InferUIMessageChunk } from "ai";
-import { start } from "workflow/api";
+import { start } from "@/lib/workflow";
 import type { WebAgentUIMessage } from "@/app/types";
 import {
   compareAndSetChatActiveStreamId,
@@ -234,7 +234,7 @@ export async function POST(req: Request) {
   if (!claimed) {
     // Another request won the race — cancel our duplicate workflow.
     try {
-      const { getRun } = await import("workflow/api");
+      const { getRun } = await import("@/lib/workflow");
       getRun(run.runId).cancel();
     } catch {
       // Best-effort cleanup.
@@ -276,7 +276,7 @@ async function reconcileExistingActiveStream(
   chatId: string,
   activeStreamId: string,
 ): Promise<ExistingActiveStreamResolution> {
-  const { getRun } = await import("workflow/api");
+  const { getRun } = await import("@/lib/workflow");
   let currentStreamId: string | null = activeStreamId;
 
   for (

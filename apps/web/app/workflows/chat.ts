@@ -9,8 +9,7 @@ import {
   type UIMessageChunk,
 } from "ai";
 import type { OpenHarnessAgentCallOptions } from "@open-harness/agent";
-import { getWorkflowMetadata, getWritable } from "workflow";
-import { getRun } from "workflow/api";
+import { getWorkflowMetadata, getWritable, getRun } from "@/lib/workflow";
 import { addLanguageModelUsage } from "./usage-utils";
 import type {
   WebAgentCommitData,

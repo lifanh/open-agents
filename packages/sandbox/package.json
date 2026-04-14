@@ -12,7 +12,11 @@
     "./vercel/index.js": "./vercel/index.ts",
     "./vercel/snapshot-refresh.js": "./vercel/snapshot-refresh.ts",
     "./vercel/sandbox.js": "./vercel/sandbox.ts",
-    "./vercel/config.js": "./vercel/config.ts"
+    "./vercel/config.js": "./vercel/config.ts",
+    "./cloudflare": "./cloudflare/index.ts",
+    "./cloudflare/index.js": "./cloudflare/index.ts",
+    "./cloudflare/sandbox.js": "./cloudflare/sandbox.ts",
+    "./cloudflare/config.js": "./cloudflare/config.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

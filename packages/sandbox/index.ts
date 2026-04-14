@@ -28,3 +28,15 @@ export {
   type VercelSandboxConnectConfig,
   type VercelState,
 } from "./vercel";
+
+// cloudflare
+export {
+  connectCloudflareSandbox,
+  CloudflareSandbox,
+  type CloudflareSandboxConfig,
+  type CloudflareSandboxConnectConfig,
+  type CloudflareState,
+} from "./cloudflare";
+
+// utility
+export { getDefaultSandboxType } from "./factory";

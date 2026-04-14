@@ -1,5 +1,7 @@
 import type { Sandbox, SandboxHooks } from "./interface";
 import type { SandboxStatus } from "./types";
+import { connectCloudflare } from "./cloudflare/connect";
+import type { CloudflareState } from "./cloudflare/state";
 import { connectVercel } from "./vercel/connect";
 import type { VercelState } from "./vercel/state";
 
@@ -10,7 +12,9 @@ export type { SandboxStatus };
  * Unified sandbox state type.
  * Use `type` discriminator to determine which sandbox implementation to use.
  */
-export type SandboxState = { type: "vercel" } & VercelState;
+export type SandboxState =
+  | ({ type: "vercel" } & VercelState)
+  | ({ type: "cloudflare" } & CloudflareState);
 
 /**
  * Base connect options for all sandbox types.
@@ -39,7 +43,7 @@ export interface ConnectOptions {
   /** Default expiration for automatic persistent-sandbox snapshots */
   snapshotExpiration?: number;
   /**
-   * Skip git init in an empty workspace (e.g. when refreshing a Vercel base snapshot).
+   * Skip git init in an empty workspace (e.g. when refreshing a base snapshot).
    */
   skipGitWorkspaceBootstrap?: boolean;
 }
@@ -47,13 +51,19 @@ export interface ConnectOptions {
 /**
  * Configuration for connecting to a sandbox.
  */
-export type SandboxConnectConfig = {
-  state: { type: "vercel" } & VercelState;
-  options?: ConnectOptions;
-};
+export type SandboxConnectConfig =
+  | {
+      state: { type: "vercel" } & VercelState;
+      options?: ConnectOptions;
+    }
+  | {
+      state: { type: "cloudflare" } & CloudflareState;
+      options?: ConnectOptions;
+    };
 
 /**
  * Connect to a sandbox based on the provided configuration.
+ * Automatically routes to the correct implementation based on the state type.
  */
 export async function connectSandbox(
   configOrState: SandboxConnectConfig | SandboxState,
@@ -67,9 +77,26 @@ export async function connectSandbox(
 
   if (isNewApi) {
     const config = configOrState as SandboxConnectConfig;
+    if (config.state.type === "cloudflare") {
+      return connectCloudflare(config.state, config.options);
+    }
     return connectVercel(config.state, config.options);
   }
 
   const state = configOrState as SandboxState;
+  if (state.type === "cloudflare") {
+    return connectCloudflare(state, legacyOptions);
+  }
   return connectVercel(state, legacyOptions);
+}
+
+/**
+ * Get the default sandbox type based on environment configuration.
+ * Returns "cloudflare" if CLOUDFLARE_ACCOUNT_ID is set, otherwise "vercel".
+ */
+export function getDefaultSandboxType(): "vercel" | "cloudflare" {
+  if (process.env.CLOUDFLARE_ACCOUNT_ID) {
+    return "cloudflare";
+  }
+  return "vercel";
 }

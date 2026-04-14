@@ -1,4 +1,4 @@
-import { getRun } from "workflow/api";
+import { getRun } from "@/lib/workflow";
 import {
   requireAuthenticatedUser,
   requireOwnedChatById,

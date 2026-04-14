@@ -1,6 +1,6 @@
 import "server-only";
 
-import { start } from "workflow/api";
+import { start } from "@/lib/workflow";
 import { sandboxLifecycleWorkflow } from "@/app/workflows/sandbox-lifecycle";
 import {
   claimSessionLifecycleRunId,
@@ -70,7 +70,7 @@ function shouldStartLifecycle(
   if (!canOperateOnSandbox(session.sandboxState)) {
     return false;
   }
-  if (session.sandboxState.type !== "vercel") {
+  if (session.sandboxState.type !== "vercel" && session.sandboxState.type !== "cloudflare") {
     return false;
   }
   if (session.lifecycleRunId) {
